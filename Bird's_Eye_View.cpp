@@ -1,6 +1,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include <fstream>
+#include <string>
+#include "opencv2/opencv_modules.hpp"
+
 
 using namespace std;
 using namespace cv;
@@ -12,13 +16,15 @@ int frameHeight = 720;
 
 int main() {
 	  
-    string filename = "video1.mp4"; // Имя файла тут
+	bool playVideo = true;
+    string filename = "video3.mp4"; // Имя файла тут
     VideoCapture capture(filename);
   
     Mat source, destination;
 
-	int alpha_ = 90, beta_ = 90, gamma_ = 90; // Инициализация переменных
+	int alpha_ = 90, beta_ = 90, gamma_ = 90; // Инициализация параметров
 	int f_ = 500, dist_ = 500;
+	int pxstep_ = 75;
 
 	namedWindow("Result", 1); 
 	createTrackbar("Alpha", "Result", &alpha_, 180);
@@ -26,10 +32,12 @@ int main() {
 	createTrackbar("Gamma", "Result", &gamma_, 180);
 	createTrackbar("Фокус", "Result", &f_, 2000);
 	createTrackbar("Дистанция", "Result", &dist_, 2000);
+	createTrackbar("Шаг Сетки", "Result", &pxstep_, 150);
 
 	while( true ) {
 		
-		capture >> source;
+		capture >> source;		
+
 
 		resize(source, source,Size(frameWidth, frameHeight));
 
@@ -91,8 +99,28 @@ int main() {
 
 		warpPerspective(source, destination, transformationMat, image_size, INTER_CUBIC | WARP_INVERSE_MAP);
 
+		int x = 0;
+		int	y = 0;
+		while (x < destination.cols)
+		{
+			line(destination, Point(x, 0), Point(x, destination.rows), Scalar(0, 255, 0), 1);
+			x += pxstep_;
+		}
+		while (y < destination.rows)
+		{
+			line(destination, Point(0, y), Point(destination.cols, y), Scalar(0, 255, 0), 1);
+			y += pxstep_;
+		}
+
 		imshow("Result", destination);
-		waitKey(100);
+
+		
+		
+		if (cv::waitKey(5) == 'p')
+			while (cv::waitKey(5) != 'p');
+		if (cv::waitKey(5) == 'з')
+			while (cv::waitKey(5) != 'p');
+		/*waitKey(100);*/
 	}
 
 
