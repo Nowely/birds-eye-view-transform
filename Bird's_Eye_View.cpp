@@ -4,7 +4,6 @@
 #include <fstream>
 #include <string>
 #include "opencv2/opencv_modules.hpp"
-
 #include "opencv2/video/background_segm.hpp"
 #include "opencv2/video/tracking.hpp"
 #include <Windows.h>
@@ -26,10 +25,11 @@ int main() {
 
 	int alpha_ = 90, beta_ = 90, gamma_ = 90; // Инициализация параметров
 	int f_ = 500, dist_ = 500;
-	int pxstep_ = 75;
+	int pxstep_ = 50;
 	int image_h = 223;
 	int image_w = 900;
-	int turn_ = 500;
+	//int turn_ = 500;
+	int turn_ = 45;
 	Rect Rec(1080 - image_w, 720 - image_h, image_w, image_h);
 
 	namedWindow("Original", 1);
@@ -40,7 +40,8 @@ int main() {
 	createTrackbar("Фокус", "Result", &f_, 2000);
 	createTrackbar("Дистанция", "Result", &dist_, 2000);
 	createTrackbar("Шаг Сетки", "Result", &pxstep_, 150);
-	createTrackbar("Поворот", "Result", &turn_, 1000);
+	//createTrackbar("Поворот", "Result", &turn_, 1000);
+	createTrackbar("Поворот", "Result", &turn_, 180);
 
 
 	while( true ) {
@@ -111,22 +112,47 @@ int main() {
 
 		warpPerspective(source, destination, transformationMat, image_size, INTER_CUBIC | WARP_INVERSE_MAP);
 
-		int x = 0;
-		int	y = 0;
+		//grid mowing
+
+		/*int x = 0;
+		int	y = 0;*/
+		//while (x < destination.cols + 3000) 
+		//{
+		//	line(destination, Point(x - 1000 - turn_ + 500, 0), Point(x - 1000 + turn_ - 500, destination.rows), Scalar(0, 255, 0), 1);
+		//	x += pxstep_;
+		//}
+		//while (y < destination.rows + 3000)
+		//{
+		//	line(destination, Point(0, y - 1000 - turn_ + 500), Point(destination.cols, y - 1000 + turn_ - 500), Scalar(0, 255, 0), 1);
+		//	y += pxstep_;
+		//}
+
+		//rotate grid
+		double f = ((double)turn_ - 90) * PI / 180;
+		int x = -500;
+		int y = -1000;
+
 		while (x < destination.cols + 3000)
 		{
-			line(destination, Point(x - 1000, 0), Point(x - 1000 + turn_ - 500, destination.rows), Scalar(0, 255, 0), 1);
+			line(destination, 
+				Point(cos(f)* x - sin(f)*1500, -sin(f)*x - cos(f)*1500), 
+				Point(cos(f)* x + sin(f)* destination.rows*3, -sin(f) * x + cos(f) * destination.rows*3),
+				Scalar(0, 255, 0), 1);
 			x += pxstep_;
 		}
 		while (y < destination.rows + 3000)
 		{
-			line(destination, Point(0, y - 1000), Point(destination.cols, y - 1000 + turn_ - 500), Scalar(0, 255, 0), 1);
-			y += pxstep_;
+			line(destination, 
+				Point(-cos(f) * 1500 + sin(f) * y, +sin(f)*1500 + cos(f)*y),
+				Point(cos(f) * destination.cols*2 + sin(f) * y, -sin(f) * destination.cols*2 + cos(f) * y),
+				Scalar(0, 255, 0), 1);
+			y += pxstep_;			
 		}
+
 
 		imshow("Result", destination);
 		
-
+		//Pause
 		if (cv::waitKey(5) == 'p')
 			while (cv::waitKey(5) != 'p');
 		
