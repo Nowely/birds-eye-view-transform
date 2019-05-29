@@ -18,30 +18,30 @@ int frameHeight = 450;
 
 int main() {
 	  
-    string filename = "video4.mp4"; // Имя файла тут
+    string filename = "video4.mp4"; // File name
     VideoCapture capture(filename);
   
     Mat source, source1, destination;
 
-	int alpha_ = 90, beta_ = 90, gamma_ = 90; // Инициализация параметров
+	//Initialization of parameters
+	int alpha_ = 90, beta_ = 90, gamma_ = 90; 
 	int f_ = 500, dist_ = 500;
 	int pxstep_ = 50;
 	int image_h = 223;
 	int image_w = 900;
-	//int turn_ = 500;
 	int turn_ = 45;
-	Rect Rec(1080 - image_w, 720 - image_h, image_w, image_h);
+
+	Rect Rec(1280 - 200 - image_w, 720 - image_h, image_w, image_h); //ROI. for video 6,7 need change roi
 
 	namedWindow("Original", 1);
 	namedWindow("Result", 1);
 	createTrackbar("Alpha", "Result", &alpha_, 180);
 	createTrackbar("Beta", "Result", &beta_, 180);
 	createTrackbar("Gamma", "Result", &gamma_, 180);
-	createTrackbar("Фокус", "Result", &f_, 2000);
-	createTrackbar("Дистанция", "Result", &dist_, 2000);
-	createTrackbar("Шаг Сетки", "Result", &pxstep_, 150);
-	//createTrackbar("Поворот", "Result", &turn_, 1000);
-	createTrackbar("Поворот", "Result", &turn_, 180);
+	createTrackbar("Focus", "Result", &f_, 2000);
+	createTrackbar("Distance", "Result", &dist_, 2000);
+	createTrackbar("Step grid", "Result", &pxstep_, 150);
+	createTrackbar("Angle grid", "Result", &turn_, 180);
 
 
 	while( true ) {
@@ -54,25 +54,26 @@ int main() {
 		resize(source, source,Size(frameWidth, frameHeight));
 
 
-		double focalLength, dist, alpha, beta, gamma; 
+		double focalLength, dist, alpha, beta, gamma, f; 
 
 		alpha =((double)alpha_ -90) * PI/180;
 		beta =((double)beta_ -90) * PI/180;
 		gamma =((double)gamma_ -90) * PI/180;
 		focalLength = (double)f_;
 		dist = (double)dist_;
+		f = ((double)turn_ - 90) * PI / 180;
 
 		Size image_size = source.size();
 		double w = (double)image_size.width, h = (double)image_size.height;
 		
-		// Проекция матрицы 2D в 3D
+		// matrix projection 2D в 3D
 		Mat A1 = (Mat_<float>(4, 3)<< 
 			1, 0, -w/2,
 			0, 1, -h/2,
 			0, 0, 0,
 			0, 0, 1 );
 			
-		// Матрица вращения Rx, Ry, Rz
+		// rotation matrix Rx, Ry, Rz
 		Mat RX = (Mat_<float>(4, 4) << 
 			1, 0, 0, 0,
 			0, cos(alpha), -sin(alpha), 0,
@@ -91,17 +92,17 @@ int main() {
 			0, 0, 1, 0,
 			0, 0, 0, 1);
 		
-		// R - итоговая матрица вращения
+		// R - total rotation matrix
 		Mat R = RX * RY * RZ;
 
-		// T - translation матрица
+		// T - translation matrix
 		Mat T = (Mat_<float>(4, 4) << 
 			1, 0, 0, 0,  
 			0, 1, 0, 0,  
 			0, 0, 1, dist,  
 			0, 0, 0, 1); 
 		
-		// K - матрица параметрова камеры 
+		// K - camera parameter matrix 
 		Mat K = (Mat_<float>(3, 4) << 
 			focalLength, 0, w/2, 0,
 			0, focalLength, h/2, 0,
@@ -112,26 +113,9 @@ int main() {
 
 		warpPerspective(source, destination, transformationMat, image_size, INTER_CUBIC | WARP_INVERSE_MAP);
 
-		//grid mowing
-
-		/*int x = 0;
-		int	y = 0;*/
-		//while (x < destination.cols + 3000) 
-		//{
-		//	line(destination, Point(x - 1000 - turn_ + 500, 0), Point(x - 1000 + turn_ - 500, destination.rows), Scalar(0, 255, 0), 1);
-		//	x += pxstep_;
-		//}
-		//while (y < destination.rows + 3000)
-		//{
-		//	line(destination, Point(0, y - 1000 - turn_ + 500), Point(destination.cols, y - 1000 + turn_ - 500), Scalar(0, 255, 0), 1);
-		//	y += pxstep_;
-		//}
-
-		//rotate grid
-		double f = ((double)turn_ - 90) * PI / 180;
+		// grid
 		int x = -500;
 		int y = -1000;
-
 		while (x < destination.cols + 3000)
 		{
 			line(destination, 
